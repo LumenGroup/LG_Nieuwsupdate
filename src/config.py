@@ -116,7 +116,14 @@ TREFWOORDEN = [
     "datalek", "data protection", "uavg", "verwerkingsverantwoordelijke",
     "verwerker", "bijzondere persoonsgegevens", "informatiebeveiliging", "information security",
     "autoriteit persoonsgegevens", "bewaartermijn", "nis2", "cbw",
-    "inzagerecht", "recht op vergetelheid", "nis2", "informatiebeveiliging", "softwareleverancier", "softwareleveranciers",
+    "cyberbeveiligingswet", "wet weerbaarheid kritieke entiteiten",
+    "inzagerecht", "recht op vergetelheid", "softwareleverancier", "softwareleveranciers",
+    "nen 7510", "dora", "iso 27001", "iso/iec 27001", "bio",
+    "baseline informatiebeveiliging overheid", "normenkader ibp", "ibp",
+    "functionaris gegevensbescherming", "fg", "ciso", "dpo",
+    "meldplicht datalekken", "cyberincident", "cyberaanval", "ransomware",
+    "gehackt", "gelekt", "phishing",
+    "ai-verordening", "ai act", "kunstmatige intelligentie",
 ]
 
 # --- Huisstijl [Intern] ----------------------------------------------
