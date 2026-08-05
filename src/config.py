@@ -71,7 +71,7 @@ RSS_BRONNEN = [
     {
         "naam": "Zorgvisie",
         "categorie": "Nieuwswebsites",
-        "url": "https://www.zorgvisie.nl/feed/"
+        "url": "https://www.zorgvisie.nl/feed/",
         "filter_op_trefwoord": True,
     },
     {
