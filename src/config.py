@@ -57,10 +57,34 @@ RSS_BRONNEN = [
         "filter_op_trefwoord": False,
     },
     {
+        "naam": "Tweakers.net",
+        "categorie": "Nieuwswebsites",
+        "url": "https://tweakers.net/feeds/mixed.xml",
+        "filter_op_trefwoord": True,
+    },
+    {
         "naam": "European Data Protection Supervisor",
         "categorie": "Toezichthouder (EU)",
         "url": "https://www.edps.europa.eu/feed/news_en",
         "filter_op_trefwoord": False,
+    },
+    {
+        "naam": "Zorgvisie",
+        "categorie": "Nieuwswebsites",
+        "url": "https://www.zorgvisie.nl/feed/"
+        "filter_op_trefwoord": True,
+    },
+    {
+        "naam": "Bright",
+        "categorie": "Nieuwswebsites",
+        "url": "https://www.bright.nl/feed/news.xml",
+        "filter_op_trefwoord": True,
+    },
+    {
+        "naam": "ICT & Health",
+        "categorie": "Nieuwswebsites",
+        "url": "https://www.icthealth.nl/rss/news.xml",
+        "filter_op_trefwoord": True,
     }
 ]
 
@@ -92,7 +116,7 @@ TREFWOORDEN = [
     "datalek", "data protection", "uavg", "verwerkingsverantwoordelijke",
     "verwerker", "bijzondere persoonsgegevens", "informatiebeveiliging", "information security",
     "autoriteit persoonsgegevens", "bewaartermijn", "nis2", "cbw",
-    "inzagerecht", "recht op vergetelheid", "nis2", "informatiebeveiliging",
+    "inzagerecht", "recht op vergetelheid", "nis2", "informatiebeveiliging", "softwareleverancier", "softwareleveranciers",
 ]
 
 # --- Huisstijl [Intern] ----------------------------------------------
