@@ -64,7 +64,7 @@ def _bouw_datalekken_sectie(datalekken: list) -> str:
         </article>""")
     return f"""
     <section class="categorie datalekken">
-      <h2 class="categorie-kop">Datalekken deze week</h2>
+      <h2 class="categorie-kop">Datalekken en hacks deze week</h2>
       <div class="items">{''.join(kaarten)}</div>
     </section>"""
 
