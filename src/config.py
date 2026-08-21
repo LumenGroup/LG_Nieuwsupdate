@@ -121,10 +121,18 @@ TREFWOORDEN = [
     "nen 7510", "dora", "iso 27001", "iso/iec 27001", "bio",
     "baseline informatiebeveiliging overheid", "normenkader ibp", "ibp",
     "functionaris gegevensbescherming", "fg", "ciso", "dpo",
-    "meldplicht datalekken", "cyberincident", "cyberaanval", "ransomware",
-    "gehackt", "gelekt", "phishing",
-    "ai-verordening", "ai act", "kunstmatige intelligentie",
+    "meldplicht datalekken", "cyberincident", "cyberaanval", 
+    "gehackt", "hack", "hackt", "aanval", "lekt", "gelekt", "phishing",
+    "ai-verordening", "ai act", "kunstmatige intelligentie", "gegevens gestolen", "gestolen gegevens", "data gestolen", "gestolen data", "gestolen", "ransomware"
 ]
+
+# --- Datalekken-sectie (bovenaan de nieuwsbrief) --------------------------
+# Aparte, scherpere trefwoordenset dan de algemene TREFWOORDEN-lijst hierboven.
+# Deze sectie is uitsluitend bedoeld om daadwerkelijke datalekken te
+# signaleren, dus geen brede beveiligingstermen die ook los van een lek
+# voorkomen (zoals "cyberaanval" of "phishing").
+DATALEK_BRON_NAAM = "Security.nl Headlines"
+DATALEK_TREFWOORDEN = ["datalek", "gehackt", "hack", "hackt", "aanval", "lekt", "gelekt", "gegevens gestolen", "gestolen gegevens", "data gestolen", "gestolen data", "gestolen", "ransomware"]
 
 # --- Huisstijl [Intern] ----------------------------------------------
 HUISSTIJL = {

@@ -45,9 +45,33 @@ def _favicon_data_uri() -> str:
     data = base64.b64encode(pad.read_bytes()).decode("ascii")
     return f"data:image/png;base64,{data}"
 
-def bouw_html(items: list) -> str:
+def _bouw_datalekken_sectie(datalekken: list) -> str:
+    if not datalekken:
+        return ""
+    kaarten = []
+    for item in datalekken:
+        datum_regel = _nl_datum(item["datum"])
+        kaarten.append(f"""
+        <article class="item item--datalek">
+          <div class="item-meta">
+            <span class="bron">{_esc(item['bron'])}</span>
+            <span class="datum">{datum_regel}</span>
+          </div>
+          <h3 class="item-titel">
+            <a href="{_esc(item['url'])}" target="_blank" rel="noopener">{_esc(item['titel'])}</a>
+          </h3>
+          <p class="item-tekst">{_esc(item['samenvatting'])}</p>
+        </article>""")
+    return f"""
+    <section class="categorie datalekken">
+      <h2 class="categorie-kop">Datalekken deze week</h2>
+      <div class="items">{''.join(kaarten)}</div>
+    </section>"""
+
+def bouw_html(items: list, datalekken: list = None) -> str:
     h = config.HUISSTIJL
     nu = datetime.now(timezone.utc)
+    datalekken = datalekken or []
     logo_wit = _logo_wit_data_uri()
     logo_paars = _logo_paars_data_uri()
     favicon = _favicon_data_uri()
@@ -85,16 +109,19 @@ def bouw_html(items: list) -> str:
           <div class="items">{''.join(kaarten)}</div>
         </section>""")
 
-    if not secties_html:
+    datalekken_html = _bouw_datalekken_sectie(datalekken)
+
+    if not secties_html and not datalekken_html:
         secties_html.append("""
         <section class="categorie">
           <div class="leeg">Deze week zijn er geen nieuwe berichten of uitspraken gevonden binnen de ingestelde criteria.</div>
         </section>""")
 
-    aantal = len(items)
-    body = "".join(secties_html)
+    aantal = len(items) + len(datalekken)
+    body = datalekken_html + "".join(secties_html)
 
     return f"""<!DOCTYPE html>
+
 <html lang="nl">
 <head>
 <meta charset="utf-8">

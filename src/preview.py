@@ -22,7 +22,18 @@ nep_items = [
     },
 ]
 
-html_output = bouw_html(nep_items)
+nep_datalekken = [
+    {
+        "categorie": "Nieuwswebsites",
+        "bron": "Security.nl Headlines",
+        "datum": datetime.now(timezone.utc),
+        "titel": "Voorbeeld datalek voor lay-outtest",
+        "url": "https://example.com",
+        "samenvatting": "Voorbeeldsamenvatting van een datalek-artikel, om te zien hoe de aparte sectie bovenaan eruitziet.",
+    },
+]
+
+html_output = bouw_html(nep_items, nep_datalekken)
 uitvoer = Path(__file__).resolve().parent / "preview.html"
 uitvoer.write_text(html_output, encoding="utf-8")
 print(f"Geschreven naar {uitvoer}")

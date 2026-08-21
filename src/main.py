@@ -16,10 +16,11 @@ import renderer
 
 def main():
     print("== IBP Update: nieuwsbrief samenstellen ==")
-    items = collectors.verzamel_alles()
-    print(f"Totaal {len(items)} relevante items gevonden.")
+    alles = collectors.verzamel_alles()
+    items, datalekken = collectors.scheid_datalekken(alles)
+    print(f"Totaal {len(alles)} relevante items gevonden, waarvan {len(datalekken)} datalekken.")
 
-    html = renderer.bouw_html(items)
+    html = renderer.bouw_html(items, datalekken)
 
     uit_map = os.path.join(os.path.dirname(__file__), "..", "build")
     os.makedirs(uit_map, exist_ok=True)

@@ -70,7 +70,7 @@ def _struct_naar_dt(struct_time):
 
 
 # --------------------------------------------------------------------------
-# 1. RSS-bronnen
+# 1. RSS-bronnen (AP, EDPB)
 # --------------------------------------------------------------------------
 def haal_rss(bron: dict) -> list:
     items = []
@@ -260,3 +260,21 @@ def verzamel_alles() -> list:
     # Sorteer nieuwste eerst.
     alles.sort(key=lambda x: x["datum"], reverse=True)
     return alles
+
+def scheid_datalekken(alles: list) -> tuple:
+    """Splitst de al verzamelde en gesorteerde lijst in (overige, datalekken).
+
+    Datalekken zijn items van DATALEK_BRON_NAAM met een van de
+    DATALEK_TREFWOORDEN in titel of samenvatting. Ze komen alleen nog in de
+    aparte datalekken-sectie terecht, niet meer in de gewone categorie-indeling.
+    """
+    def _is_datalek(item):
+        if item["bron"] != config.DATALEK_BRON_NAAM:
+            return False
+        tekst = f"{item['titel']} {item['samenvatting']}".lower()
+        return any(tw in tekst for tw in config.DATALEK_TREFWOORDEN)
+
+    overige, datalekken = [], []
+    for item in alles:
+        (datalekken if _is_datalek(item) else overige).append(item)
+    return overige, datalekken
