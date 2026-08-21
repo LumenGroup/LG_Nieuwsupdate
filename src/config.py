@@ -122,8 +122,8 @@ TREFWOORDEN = [
     "baseline informatiebeveiliging overheid", "normenkader ibp", "ibp",
     "functionaris gegevensbescherming", "fg", "ciso", "dpo",
     "meldplicht datalekken", "cyberincident", "cyberaanval", 
-    "gehackt", "hack", "hackt", "aanval", "lekt", "gelekt", "phishing",
-    "ai-verordening", "ai act", "kunstmatige intelligentie", "gegevens gestolen", "gestolen gegevens", "data gestolen", "gestolen data", "gestolen", "ransomware"
+    "gehackt", "hack", "hackt", "lekt", "gelekt", "phishing",
+    "ai-verordening", "ai act", "kunstmatige intelligentie", "gegevens gestolen", "gestolen gegevens", "data gestolen", "gestolen data", "gegevens buitgemaakt", "data buitgemaakt", "ransomware"
 ]
 
 # --- Datalekken-sectie (bovenaan de nieuwsbrief) --------------------------
@@ -132,7 +132,7 @@ TREFWOORDEN = [
 # signaleren, dus geen brede beveiligingstermen die ook los van een lek
 # voorkomen (zoals "cyberaanval" of "phishing").
 DATALEK_BRON_NAAM = "Security.nl Headlines"
-DATALEK_TREFWOORDEN = ["datalek", "gehackt", "hack", "hackt", "aanval", "lekt", "gelekt", "gegevens gestolen", "gestolen gegevens", "data gestolen", "gestolen data", "gestolen", "ransomware"]
+DATALEK_TREFWOORDEN = ["datalek", "gehackt", "lekt", "gelekt", "gegevens gestolen", "gestolen gegevens", "data gestolen", "gestolen data", "gegevens buitgemaakt", "data buitgemaakt", "ransomware"]
 
 # --- Huisstijl [Intern] ----------------------------------------------
 HUISSTIJL = {
