@@ -58,9 +58,44 @@ def _schoon(tekst: str, max_len: int = 320) -> str:
     return afgekapt.rstrip() + "..."
 
 
+# Trefwoorden die alleen als heel woord mogen matchen (dus met woordgrens aan
+# ZOWEL het begin als het eind). Nodig voor korte, op zichzelf staande
+# afkortingen die ook als voorvoegsel van een heel ander, onschuldig woord
+# voorkomen: "bio" zit bijvoorbeeld ook in "bioscoop" en "biologie".
+EXACTE_TREFWOORDEN = {"bio"}
+
+
+def _compileer_trefwoorden(trefwoorden):
+    """Compileert trefwoorden tot regex-patronen met een woordgrens vóór het
+    trefwoord (regex \\b), zonder verplichte woordgrens erna.
+
+    Zonder enige woordgrens matcht een kort trefwoord als "fg" ook midden in
+    een ander woord (bijvoorbeeld "afgifte" of "afgelopen"), en "lekt"/
+    "gelekt" ook in "uitgelekte". Een woordgrens vóór het trefwoord voorkomt
+    dat, terwijl je erna niets afdwingt: zo blijft "datalek" gewoon matchen
+    in "datalekken", "hack" in "hacken"/"hackten", en "privacy" in het
+    Nederlandse aan-elkaar-geschreven "privacytoezichthouder" of
+    "privacytool" — dat is precies hoe het Nederlands woorden samenstelt, en
+    die vervoegingen/samenstellingen hoef je dus niet los toe te voegen.
+
+    Voor trefwoorden in EXACTE_TREFWOORDEN wordt wél een woordgrens aan beide
+    kanten geëist, omdat die anders te makkelijk in een onschuldig ander
+    woord passen (zie EXACTE_TREFWOORDEN hierboven).
+    """
+    patronen = []
+    for tw in trefwoorden:
+        eind = r"\b" if tw.lower() in EXACTE_TREFWOORDEN else ""
+        patronen.append(re.compile(r"\b" + re.escape(tw) + eind, re.IGNORECASE))
+    return patronen
+
+
+_TREFWOORD_PATRONEN = _compileer_trefwoorden(config.TREFWOORDEN)
+_DATALEK_PATRONEN = _compileer_trefwoorden(config.DATALEK_TREFWOORDEN)
+
+
 def _bevat_trefwoord(*teksten) -> bool:
-    bak = " ".join(t for t in teksten if t).lower()
-    return any(tw in bak for tw in config.TREFWOORDEN)
+    bak = " ".join(t for t in teksten if t)
+    return any(patroon.search(bak) for patroon in _TREFWOORD_PATRONEN)
 
 
 def _struct_naar_dt(struct_time):
@@ -271,8 +306,8 @@ def scheid_datalekken(alles: list) -> tuple:
     def _is_datalek(item):
         if item["bron"] != config.DATALEK_BRON_NAAM:
             return False
-        tekst = f"{item['titel']} {item['samenvatting']}".lower()
-        return any(tw in tekst for tw in config.DATALEK_TREFWOORDEN)
+        tekst = f"{item['titel']} {item['samenvatting']}"
+        return any(patroon.search(tekst) for patroon in _DATALEK_PATRONEN)
 
     overige, datalekken = [], []
     for item in alles:
