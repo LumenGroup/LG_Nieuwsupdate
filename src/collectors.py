@@ -79,8 +79,7 @@ def _compileer_trefwoorden(trefwoorden):
     die vervoegingen/samenstellingen hoef je dus niet los toe te voegen.
 
     Voor trefwoorden in EXACTE_TREFWOORDEN wordt wél een woordgrens aan beide
-    kanten geëist, omdat die anders te makkelijk in een onschuldig ander
-    woord passen (zie EXACTE_TREFWOORDEN hierboven).
+    kanten geëist, omdat die anders te makkelijk in een onschuldig ander woord passen (zie EXACTE_TREFWOORDEN hierboven).
     """
     patronen = []
     for tw in trefwoorden:
