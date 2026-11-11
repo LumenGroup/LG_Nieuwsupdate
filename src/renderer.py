@@ -3,7 +3,7 @@ Bouwt uit de verzamelde items een statische HTML-pagina in [Intern]-huisstijl.
 De pagina is bewust selfcontained (inline CSS) zodat GitHub Pages hem direct serveert.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import html
 import base64
 from pathlib import Path
@@ -45,28 +45,76 @@ def _favicon_data_uri() -> str:
     data = base64.b64encode(pad.read_bytes()).decode("ascii")
     return f"data:image/png;base64,{data}"
 
+def _kaart(item: dict, toon_categorie: bool = False, extra_class: str = "") -> str:
+    """Eén bericht als kaart. In het 24-uursblok tonen we ook de categorie,
+    omdat berichten daar uit alle categorieën door elkaar staan."""
+    tag = ""
+    if toon_categorie:
+        tag = f'<span class="categorie-tag">{_esc(item.get("tag") or item["categorie"])}</span>'
+    klasse = f"item {extra_class}".strip()
+    return f"""
+            <article class="{klasse}">
+              <div class="item-meta">
+                <span class="bron">{_esc(item['bron'])}</span>
+                {tag}
+                <span class="datum">{_nl_datum(item['datum'])}</span>
+              </div>
+              <h3 class="item-titel">
+                <a href="{_esc(item['url'])}" target="_blank" rel="noopener">{_esc(item['titel'])}</a>
+              </h3>
+              <p class="item-tekst">{_esc(item['samenvatting'])}</p>
+            </article>"""
+
+
+def _sectie(kop: str, kaarten: list, extra_class: str = "") -> str:
+    return f"""
+        <section class="categorie {extra_class}">
+          <h2 class="categorie-kop">{_esc(kop)}</h2>
+          <div class="items">{''.join(kaarten)}</div>
+        </section>"""
+
+
+def _bouw_nieuw_sectie(nieuw: list) -> str:
+    """Blok bovenaan met alles van de afgelopen UREN_NIEUW uur, nieuwste eerst."""
+    kop = f"Afgelopen {config.UREN_NIEUW} uur"
+    if not nieuw:
+        return f"""
+        <section class="categorie nieuw">
+          <h2 class="categorie-kop">{kop}</h2>
+          <div class="leeg">Geen nieuwe berichten in de afgelopen {config.UREN_NIEUW} uur. Hieronder staan de berichten van de afgelopen {config.DAGEN_TERUG} dagen.</div>
+        </section>"""
+    return _sectie(kop, [_kaart(i, toon_categorie=True) for i in nieuw], "nieuw")
+
+
+def _bouw_categorie_secties(items: list) -> list:
+    per_categorie = {}
+    for item in items:
+        per_categorie.setdefault(item["categorie"], []).append(item)
+    secties = []
+    # Bekende categorieën eerst, in vaste volgorde; daarna nieuwe automatisch erachter.
+    overige = [c for c in per_categorie if c not in CATEGORIE_VOLGORDE]
+    for categorie in CATEGORIE_VOLGORDE + overige:
+        groep = per_categorie.get(categorie, [])
+        if groep:
+            groep = sorted(groep, key=lambda x: x["datum"], reverse=True)
+            secties.append(_sectie(categorie, [_kaart(i) for i in groep]))
+    return secties
+
+
+def _splits_nieuw(items: list, nu: datetime) -> tuple:
+    """Splitst in (nieuw, ouder) op basis van UREN_NIEUW. Elk bericht komt in
+    precies één van beide terecht, zodat niets dubbel op de pagina staat."""
+    grens = nu - timedelta(hours=config.UREN_NIEUW)
+    nieuw = [i for i in items if i["datum"] >= grens]
+    ouder = [i for i in items if i["datum"] < grens]
+    return nieuw, ouder
+
 def _bouw_datalekken_sectie(datalekken: list) -> str:
     if not datalekken:
         return ""
-    kaarten = []
-    for item in datalekken:
-        datum_regel = _nl_datum(item["datum"])
-        kaarten.append(f"""
-        <article class="item item--datalek">
-          <div class="item-meta">
-            <span class="bron">{_esc(item['bron'])}</span>
-            <span class="datum">{datum_regel}</span>
-          </div>
-          <h3 class="item-titel">
-            <a href="{_esc(item['url'])}" target="_blank" rel="noopener">{_esc(item['titel'])}</a>
-          </h3>
-          <p class="item-tekst">{_esc(item['samenvatting'])}</p>
-        </article>""")
-    return f"""
-    <section class="categorie datalekken">
-      <h2 class="categorie-kop">Datalekken en hacks deze week</h2>
-      <div class="items">{''.join(kaarten)}</div>
-    </section>"""
+    kaarten = [_kaart(i, extra_class="item--datalek") for i in datalekken]
+    return _sectie("Datalekken en hacks deze week", kaarten, "datalekken")
+
 
 def bouw_html(items: list, datalekken: list = None) -> str:
     h = config.HUISSTIJL
@@ -76,49 +124,26 @@ def bouw_html(items: list, datalekken: list = None) -> str:
     logo_paars = _logo_paars_data_uri()
     favicon = _favicon_data_uri()
 
-    # Groepeer per categorie.
-    per_categorie = {}
-    for item in items:
-        per_categorie.setdefault(item["categorie"], []).append(item)
+    # Nieuwe berichten (ook nieuwe datalekken) gaan naar het blok bovenaan;
+    # oudere datalekken blijven in hun eigen blok, de rest per categorie.
+    for d in datalekken:
+        d["tag"] = "Datalek of hack"
+    nieuw, oude_items = _splits_nieuw(items + datalekken, nu)
+    nieuw.sort(key=lambda x: x["datum"], reverse=True)
+    oude_datalekken = [i for i in oude_items if i in datalekken]
+    oude_items = [i for i in oude_items if i not in datalekken]
 
-    # Bouw de secties.
-    secties_html = []
-    # Bekende categorieën eerst, in vaste volgorde; daarna nieuwe automatisch erachter.
-    overige = [c for c in per_categorie if c not in CATEGORIE_VOLGORDE]
-    for categorie in CATEGORIE_VOLGORDE + overige:
-        groep = per_categorie.get(categorie, [])
-        if not groep:
-            continue
-        kaarten = []
-        for item in groep:
-            datum_regel = _nl_datum(item["datum"])
-            kaarten.append(f"""
-            <article class="item">
-              <div class="item-meta">
-                <span class="bron">{_esc(item['bron'])}</span>
-                <span class="datum">{datum_regel}</span>
-              </div>
-              <h3 class="item-titel">
-                <a href="{_esc(item['url'])}" target="_blank" rel="noopener">{_esc(item['titel'])}</a>
-              </h3>
-              <p class="item-tekst">{_esc(item['samenvatting'])}</p>
-            </article>""")
-        secties_html.append(f"""
-        <section class="categorie">
-          <h2 class="categorie-kop">{_esc(categorie)}</h2>
-          <div class="items">{''.join(kaarten)}</div>
-        </section>""")
-
-    datalekken_html = _bouw_datalekken_sectie(datalekken)
-
-    if not secties_html and not datalekken_html:
-        secties_html.append("""
-        <section class="categorie">
-          <div class="leeg">Deze week zijn er geen nieuwe berichten of uitspraken gevonden binnen de ingestelde criteria.</div>
-        </section>""")
+    secties_html = _bouw_categorie_secties(oude_items)
+    datalekken_html = _bouw_datalekken_sectie(oude_datalekken)
 
     aantal = len(items) + len(datalekken)
-    body = datalekken_html + "".join(secties_html)
+    if aantal == 0:
+        body = """
+        <section class="categorie">
+          <div class="leeg">Deze week zijn er geen nieuwe berichten of uitspraken gevonden binnen de ingestelde criteria.</div>
+        </section>"""
+    else:
+        body = _bouw_nieuw_sectie(nieuw) + datalekken_html + "".join(secties_html)
 
     return f"""<!DOCTYPE html>
 
@@ -226,6 +251,12 @@ def bouw_html(items: list, datalekken: list = None) -> str:
   .item-titel a:hover {{ color: var(--accent); text-decoration: underline; text-decoration-color: var(--primair); }}
   .item-tekst {{ margin: 0; color: var(--tekst-zacht); font-size: 15px; }}
 
+  .categorie.nieuw .categorie-kop {{ border-bottom-width: 4px; }}
+  .categorie-tag {{
+    font-size: 11.5px; color: var(--accent);
+    border: 1px solid var(--lijn); padding: 1px 7px; border-radius: 3px;
+  }}
+
   .leeg {{ padding: 24px; background: var(--vlak); border-radius: 6px; color: var(--tekst-zacht); }}
 
   footer {{
@@ -246,13 +277,13 @@ def bouw_html(items: list, datalekken: list = None) -> str:
 <body>
   <header class="hero">
     <div class="hero-inner">
-      <span class="merk">Privacy & nformatiebeveiliging nieuwsupdate</span>
+      <span class="merk">Privacy & informatiebeveiliging nieuwsupdate</span>
       <a href="https://www.lumengroup.nl" target="_blank" rel="noopener">
         <img src="{logo_wit}" alt="{_esc(config.NIEUWSBRIEF_TITEL)}" class="logo_groot">
       </a>
       <!-- <h1>{_esc(config.NIEUWSBRIEF_TITEL)}<span class="accentstreep"></span></h1> -->
       <p class="sub">{_esc(config.NIEUWSBRIEF_SUBTITEL)}</p>
-      <div class="uitgave">Versie {_nl_datum(nu)} · {aantal} {'berichten' if aantal != 1 else 'bericht'} uit de afgelopen {config.DAGEN_TERUG} dagen</div>
+      <div class="uitgave">Versie {_nl_datum(nu)} · {aantal} {'berichten' if aantal != 1 else 'bericht'} uit de afgelopen {config.DAGEN_TERUG} dagen, waarvan {len(nieuw)} in de afgelopen {config.UREN_NIEUW} uur</div>
     </div>
   </header>
 

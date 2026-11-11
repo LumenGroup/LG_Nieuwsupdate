@@ -1,39 +1,74 @@
-from datetime import datetime, timezone
+"""
+Lokaal testen van de nieuwsupdate.
+
+    python src/preview.py         haalt de echte RSS-bronnen op (zoals de dagelijkse run)
+    python src/preview.py --nep   gebruikt nepberichten, voor een snelle lay-outcheck zonder internet
+
+Het resultaat komt in src/preview.html en wordt direct in je browser geopend.
+Er wordt niets gepubliceerd; dat doet alleen de GitHub-workflow.
+"""
+
+import argparse
+import os
+import sys
+import webbrowser
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+sys.path.insert(0, os.path.dirname(__file__))
+
+import collectors
 from renderer import bouw_html
 
-nep_items = [
-    {
-        "categorie": "Toezichthouder (NL)",
-        "bron": "Autoriteit Persoonsgegevens",
-        "datum": datetime.now(timezone.utc),
-        "titel": "Voorbeeldtitel voor lay-outtest",
-        "url": "https://example.com",
-        "samenvatting": "Korte voorbeeldsamenvatting om te zien hoe de kaart eruitziet met wat langere tekst erin.",
-    },
-    {
-        "categorie": "Jurisprudentie (EU)",
-        "bron": "HvJ-EU",
-        "datum": datetime.now(timezone.utc),
-        "titel": "Tweede voorbeeld, andere categorie",
-        "url": "https://example.com",
-        "samenvatting": "Ook hier een voorbeeldtekst.",
-    },
-]
 
-nep_datalekken = [
-    {
-        "categorie": "Nieuwswebsites",
-        "bron": "Security.nl Headlines",
-        "datum": datetime.now(timezone.utc),
-        "titel": "Voorbeeld datalek voor lay-outtest",
+def _nep(categorie, bron, uren_geleden, titel):
+    return {
+        "categorie": categorie,
+        "bron": bron,
+        "datum": datetime.now(timezone.utc) - timedelta(hours=uren_geleden),
+        "titel": titel,
         "url": "https://example.com",
-        "samenvatting": "Voorbeeldsamenvatting van een datalek-artikel, om te zien hoe de aparte sectie bovenaan eruitziet.",
-    },
-]
+        "samenvatting": "Voorbeeldsamenvatting om te zien hoe de kaart eruitziet met wat langere tekst erin.",
+    }
 
-html_output = bouw_html(nep_items, nep_datalekken)
-uitvoer = Path(__file__).resolve().parent / "preview.html"
-uitvoer.write_text(html_output, encoding="utf-8")
-print(f"Geschreven naar {uitvoer}")
+
+def nepdata():
+    """Mix van berichten binnen en buiten het 24-uursvenster."""
+    items = [
+        _nep("Toezichthouder (NL)", "Autoriteit Persoonsgegevens", 3, "Nieuw bericht van vanochtend"),
+        _nep("Nieuwswebsites", "Tweakers.net", 20, "Nieuw bericht van gisteravond"),
+        _nep("Toezichthouder (NL)", "Autoriteit Persoonsgegevens", 50, "Ouder bericht, twee dagen geleden"),
+        _nep("Jurisprudentie (EU)", "HvJ-EU", 96, "Ouder bericht, andere categorie"),
+    ]
+    datalekken = [
+        _nep("Nieuwswebsites", "Security.nl Headlines", 5, "Nieuw datalek, hoort in het 24-uursblok"),
+        _nep("Nieuwswebsites", "Security.nl Headlines", 72, "Ouder datalek, hoort in het datalekblok"),
+    ]
+    return items, datalekken
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Lokale preview van de nieuwsupdate.")
+    parser.add_argument("--nep", action="store_true", help="gebruik nepberichten in plaats van de echte bronnen")
+    parser.add_argument("--niet-openen", action="store_true", help="open de preview niet in de browser")
+    args = parser.parse_args()
+
+    if args.nep:
+        print("== Preview met nepberichten ==")
+        items, datalekken = nepdata()
+    else:
+        print("== Preview met echte bronnen ==")
+        alles = collectors.verzamel_alles()
+        items, datalekken = collectors.scheid_datalekken(alles)
+        print(f"Totaal {len(alles)} relevante items gevonden, waarvan {len(datalekken)} datalekken.")
+
+    html_output = bouw_html(items, datalekken)
+    uitvoer = Path(__file__).resolve().parent / "preview.html"
+    uitvoer.write_text(html_output, encoding="utf-8")
+    print(f"Geschreven naar {uitvoer}")
+    if not args.niet_openen:
+        webbrowser.open(uitvoer.as_uri())
+
+
+if __name__ == "__main__":
+    main()

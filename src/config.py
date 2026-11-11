@@ -4,14 +4,19 @@ Alle instelbare waarden staan hier bij elkaar, zodat je niets in de logica hoeft
 """
 
 # --- Tijdvenster ---------------------------------------------------------
-# Aantal dagen terug dat als "nieuw" telt. Wekelijks = 7.
+# Aantal dagen terug dat in de nieuwsupdate wordt getoond.
 DAGEN_TERUG = 7
+# Berichten van de afgelopen zoveel uur komen bovenaan in een apart blok.
+# Strikt 24 uur, ook op maandag (weekendberichten staan dan in de categorieën).
+UREN_NIEUW = 24
 
 # --- Bronnen -------------------------------------------------------------
 # AP en EDPB leveren een RSS-feed. Rechtspraak.nl en EUR-Lex worden apart
 # opgehaald via hun eigen API (zie collectors.py), omdat filteren daar
 # gerichter moet.
 
+# De volgorde telt: staat hetzelfde bericht (zelfde link of titel) in meerdere
+# feeds, dan blijft alleen het exemplaar van de bron die hier het hoogst staat.
 RSS_BRONNEN = [
     {
         "naam": "Autoriteit Persoonsgegevens",
@@ -88,6 +93,20 @@ RSS_BRONNEN = [
     }
 ]
 
+# --- Ontdubbelen van verwante bronnen ------------------------------------
+# Berichten met exact dezelfde link of titel worden altijd ontdubbeld.
+# Binnen een groep hieronder telt een bericht ook als dubbel als de koppen
+# grotendeels dezelfde kernwoorden delen (bronnen die elkaars berichten
+# overnemen en de kop licht aanpassen). Het exemplaar van de bron die hoger
+# in RSS_BRONNEN staat, blijft staan.
+VERWANTE_BRONNEN = [
+    ["Security.nl Headlines", "Privacynieuws.nl"],
+]
+# Minimaal aantal gedeelde kernwoorden in de kop, en welk deel van de
+# kortste kop dat moet zijn.
+VERWANT_MIN_WOORDEN = 3
+VERWANT_MIN_AANDEEL = 0.6
+
 # --- Rechtspraak.nl ------------------------------------------------------
 # Open Data REST-webservice. We halen de ECLI-index op (gewijzigd sinds datum)
 # en filteren daarna op trefwoorden in titel/samenvatting.
@@ -149,4 +168,4 @@ HUISSTIJL = {
 
 # Titel en subtitel van de nieuwsbrief.
 NIEUWSBRIEF_TITEL = "Lumen Group Nieuwsupdate"
-NIEUWSBRIEF_SUBTITEL = "Wekelijkse update met nieuws en jurisprudentie in privacy en informatiebeveiliging. Update elke maandag automatisch om 09:00 uur. Website wordt niet gearchiveerd, oude versies kunnen worden opgeslagen door de HTML-code lokaal op je pc op te slaan (CTRL+S in de browser)."
+NIEUWSBRIEF_SUBTITEL = "Dagelijkse update met nieuws en jurisprudentie in privacy en informatiebeveiliging van de afgelopen week. Elke werkdag in de ochtend automatisch bijgewerkt, met de berichten van de afgelopen 24 uur bovenaan. Website wordt niet gearchiveerd, oude versies kunnen worden opgeslagen door de HTML-code lokaal op je pc op te slaan (CTRL+S in de browser)."
